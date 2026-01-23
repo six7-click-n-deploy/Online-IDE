@@ -23,8 +23,8 @@ source "openstack" "image" {
   use_blockstorage_volume = var.use_blockstorage_volume
   volume_size             = var.volume_size
 
-  use_floating_ip  = var.use_floating_ip
- 
+  use_floating_ip = var.use_floating_ip
+
 
   ssh_ip_version = "4"
   ssh_timeout    = var.ssh_timeout

@@ -16,7 +16,7 @@
 output "user_accounts" {
   description = "[CONTRACT] User accounts - Struktur siehe Kommentar oben"
   value       = local.user_accounts
-  sensitive   = true  # Enthält Passwörter
+  sensitive   = true # Enthält Passwörter
 }
 
 ############################
@@ -27,10 +27,10 @@ output "team_vms" {
   description = "Details aller Team-VMs"
   value = {
     for team in local.teams_list : team => {
-      instance_id  = openstack_compute_instance_v2.team_ide[team].id
-      instance_name = openstack_compute_instance_v2.team_ide[team].name
-      fixed_ip     = openstack_compute_instance_v2.team_ide[team].network[0].fixed_ip_v4
-      floating_ip  = local.enable_floating_ip ? openstack_networking_floatingip_v2.team_fip[team].address : null
+      instance_id     = openstack_compute_instance_v2.team_ide[team].id
+      instance_name   = openstack_compute_instance_v2.team_ide[team].name
+      fixed_ip        = openstack_compute_instance_v2.team_ide[team].network[0].fixed_ip_v4
+      floating_ip     = local.enable_floating_ip ? openstack_networking_floatingip_v2.team_fip[team].address : null
       code_server_url = local.enable_floating_ip ? "http://${openstack_networking_floatingip_v2.team_fip[team].address}:8080" : "http://${openstack_compute_instance_v2.team_ide[team].network[0].fixed_ip_v4}:8080"
     }
   }

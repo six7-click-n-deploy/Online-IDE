@@ -17,13 +17,13 @@ variable "users" {
 variable "network_uuid" {
   description = "[BACKEND] UUID des internen Netzwerks (von Platform-Admin konfiguriert)"
   type        = string
-  default     = "34a00b87-57ce-42c4-8e1b-9ea8a657ec2e"  
+  default     = "34a00b87-57ce-42c4-8e1b-9ea8a657ec2e"
 }
 
 variable "floating_ip_pool" {
   description = "[BACKEND] Name des External Networks für Floating IPs (von Platform-Admin konfiguriert)"
   type        = string
-  default     = "DHBW"  
+  default     = "DHBW"
 }
 
 variable "ssh_cidr" {

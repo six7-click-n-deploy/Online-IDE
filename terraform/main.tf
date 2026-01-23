@@ -27,7 +27,7 @@ locals {
   app_name           = "online-ide"
   image_name         = "online-ide-v1"
   flavor             = "gp1.small"
-  key_pair           = ""  # Leer = nur Passwort-Auth
+  key_pair           = "" # Leer = nur Passwort-Auth
   enable_floating_ip = true
   allow_icmp         = true
 }
@@ -59,7 +59,7 @@ locals {
       }
     ]
   ])
-  
+
   users_map  = { for user in local.all_users : user.id => user }
   teams_list = distinct([for user in local.all_users : user.team])
 }
@@ -97,8 +97,8 @@ resource "openstack_compute_instance_v2" "team_ide" {
 
   # cloud-init user-data: User und Gruppen für dieses Team
   user_data = templatefile("${path.module}/user-data.yaml.tpl", {
-    teams = [each.key]
-    users = { for uid, u in local.users_map : uid => u if u.team == each.key }
+    teams     = [each.key]
+    users     = { for uid, u in local.users_map : uid => u if u.team == each.key }
     passwords = { for uid, u in local.users_map : uid => random_password.user_passwords[uid].result if u.team == each.key }
   })
 
@@ -187,7 +187,7 @@ locals {
       for uid, user in local.users_map : uid if user.team == team
     ]
   }
-  
+
   # Map: user_id -> index innerhalb des Teams (für Port-Berechnung)
   user_indices = merge([
     for team in local.teams_list : {
