@@ -12,6 +12,7 @@ locals {
 }
 
 source "openstack" "image" {
+  cloud             = var.cloud
   image_name        = local.final_image_name
   source_image_name = var.source_image_name
   flavor            = var.flavor
@@ -33,7 +34,19 @@ source "openstack" "image" {
 build {
   sources = ["source.openstack.image"]
 
+  # Warte auf Cloud-Init bevor Provisioning startet
+  provisioner "shell" {
+    inline = [
+      "echo 'Waiting for cloud-init...'",
+      "cloud-init status --wait || true",
+      "echo 'Cloud-init ready'"
+    ]
+  }
+
+  # Hauptprovisionierung
   provisioner "shell" {
     script = var.provision_script
+    # Retry bei temporären Netzwerkfehlern (apt-get)
+    max_retries = 3
   }
 }

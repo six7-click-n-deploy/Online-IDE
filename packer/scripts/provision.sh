@@ -2,67 +2,62 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# TEMPLATE Provisioning Script
-# Ziel: Hier kommt *deine* App/Runtime rein.
+# Online-IDE Provisioning Script
+# Ziel: code-server (VS Code im Browser) installieren und systemd-ready machen
 #
-# Regeln:
-# - idempotent schreiben (mehrfaches Ausführen darf nicht kaputt machen)
-# - keine Secrets hardcoden (nutze CI, Vault, cloud-init, env vars, etc.)
-# - am Ende: Service läuft / Artefakte liegen / Ports passen zur SG
+# Wichtig:
+# - KEINE User anlegen (kommt später via cloud-init)
+# - KEINE Passwörter setzen
+# - KEINE kurs-/teamspezifischen Daten
+# - Generisches, wiederverwendbares Image
 # -----------------------------------------------------------------------------
 
-echo "Waiting for cloud-init (if present)..."
+echo "[1/5] Waiting for cloud-init to complete..."
 cloud-init status --wait || true
 
-# Baseline (optional):
-# - Updates / Base-Pakete
-# - Logs/Debug
-echo "Updating package lists..."
+echo "[2/5] Updating package lists and installing dependencies..."
 sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  curl \
+  wget \
+  git \
+  build-essential \
+  python3 \
+  python3-pip \
+  nodejs \
+  npm
 
 # -----------------------------------------------------------------------------
-# [1] Runtime installieren: minimaler Webserver (nginx)
+# code-server Installation
 # -----------------------------------------------------------------------------
-echo "Installing nginx (if not already installed)..."
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+echo "[3/5] Installing code-server..."
 
-echo "Enabling and restarting nginx..."
-sudo systemctl enable nginx
-sudo systemctl restart nginx
+# Offizielle Installation via Install-Script
+curl -fsSL https://code-server.dev/install.sh | sh
 
-# -----------------------------------------------------------------------------
-# [2] App-Artefakt: einfache HTML-Seite
-# -----------------------------------------------------------------------------
-echo "Deploying simple index.html..."
-sudo mkdir -p /var/www/html
+# code-server systemd-Service wird automatisch erstellt, aber nicht gestartet
+# (wird pro User via cloud-init gestartet)
 
-sudo tee /var/www/html/index.html >/dev/null << 'EOF'
-<html>
-  <head>
-    <title>myapp2</title>
-  </head>
-  <body>
-    <h1>Hello from myapp2!</h1>
-    <p>Built with Packer & deployed with Terraform.</p>
-  </body>
-</html>
+echo "[4/5] Configuring code-server defaults..."
+
+# Globale config für code-server (wird von userspezifischen configs überschrieben)
+sudo mkdir -p /etc/code-server
+
+# Default-Config: lauscht auf allen Interfaces, Port 8080
+sudo tee /etc/code-server/config.yaml >/dev/null << 'EOF'
+bind-addr: 0.0.0.0:8080
+auth: password
+cert: false
 EOF
 
-# -----------------------------------------------------------------------------
-# [3] (Optional) eigener systemd-Service
-# - hier nicht nötig, nginx reicht als Webserver
-# -----------------------------------------------------------------------------
-# Beispiel bleibt auskommentiert
+echo "[5/5] Cleanup and finalization..."
 
-# -----------------------------------------------------------------------------
-# [4] Optional: Reverse Proxy / TLS / Firewall
-# - für das Minimal-Beispiel nicht nötig
-# -----------------------------------------------------------------------------
+# Apt-Cache leeren für kleineres Image
+sudo apt-get clean
+sudo rm -rf /var/lib/apt/lists/*
 
-# -----------------------------------------------------------------------------
-# [5] Cleanup (optional, wenn du kleinere Images willst)
-# -----------------------------------------------------------------------------
-# sudo apt-get clean
-# sudo rm -rf /var/lib/apt/lists/*
+# machine-id zurücksetzen (wichtig für cloud-init)
+sudo truncate -s 0 /etc/machine-id
+sudo rm -f /var/lib/dbus/machine-id
 
-echo "Provisioning finished."
+echo "✓ Provisioning finished. Image is ready for deployment."

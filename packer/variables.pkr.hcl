@@ -2,10 +2,16 @@
 # Frontend-Variablen (User)
 ########################################
 
+variable "cloud" {
+  type        = string
+  description = "Name der Cloud aus clouds.yaml"
+  default     = "openstack"
+}
+
 variable "app_name" {
   type        = string
   description = "Logischer Name der Applikation / des Images"
-  default     = "myapp2"
+  default     = "online-ide"
 }
 
 variable "app_version" {
@@ -45,7 +51,7 @@ variable "networks" {
 variable "security_groups" {
   type        = list(string)
   description = "Security Groups für die Build-VM"
-  default     = ["simple-webserver-sg-ff3ad318"]
+  default     = ["simple-webserver-sg-81ec1652"]
 }
 
 variable "ssh_username" {
@@ -56,14 +62,14 @@ variable "ssh_username" {
 
 variable "ssh_timeout" {
   type        = string
-  description = "SSH Timeout"
-  default     = "15m"
+  description = "SSH Timeout (erhöht für code-server Installation)"
+  default     = "20m"
 }
 
 variable "use_blockstorage_volume" {
   type        = bool
-  description = "Cinder-Volume verwenden"
-  default     = true
+  description = "Cinder-Volume verwenden (false = ephemeral storage, empfohlen um hängende Volumes zu vermeiden)"
+  default     = false
 }
 
 variable "volume_size" {
@@ -74,8 +80,8 @@ variable "volume_size" {
 
 variable "use_floating_ip" {
   type        = bool
-  description = "Floating IP verwenden"
-  default     = false                                    
+  description = "Floating IP für Build-VM verwenden (sollte false sein)"
+  default     = false
 }
 
 variable "floating_ip_pool" {
