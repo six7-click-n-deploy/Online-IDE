@@ -25,16 +25,16 @@ provider "openstack" {
 locals {
   # Diese Werte sind App-spezifisch und werden vom App-Entwickler definiert
   app_name           = "online-ide"
-  image_name         = "online-ide-v1"
   flavor             = "gp1.small"
   key_pair           = "" # Leer = nur Passwort-Auth
   enable_floating_ip = true
   allow_icmp         = true
+  ssh_cidr           = "0.0.0.0/0"  # SSH-Zugriff von überall erlauben
 }
 
 # Packer-Image aus Glance laden
 data "openstack_images_image_v2" "image" {
-  name        = local.image_name
+  name        = var.image_name
   most_recent = true
 }
 
@@ -102,12 +102,9 @@ resource "openstack_compute_instance_v2" "team_ide" {
     passwords = { for uid, u in local.users_map : uid => random_password.user_passwords[uid].result if u.team == each.key }
   })
 
-  metadata = merge(
-    var.metadata,
-    {
-      team = each.key
-    }
-  )
+  metadata = {
+    team = each.key
+  }
 }
 
 # Security Group pro Team
@@ -127,7 +124,7 @@ resource "openstack_networking_secgroup_rule_v2" "ssh" {
   protocol          = "tcp"
   port_range_min    = 22
   port_range_max    = 22
-  remote_ip_prefix  = var.ssh_cidr
+  remote_ip_prefix  = local.ssh_cidr
   security_group_id = openstack_networking_secgroup_v2.team_sg[each.key].id
 }
 
