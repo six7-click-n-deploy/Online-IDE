@@ -29,7 +29,7 @@ locals {
   key_pair           = "" # Leer = nur Passwort-Auth
   enable_floating_ip = true
   allow_icmp         = true
-  ssh_cidr           = "0.0.0.0/0"  # SSH-Zugriff von überall erlauben
+  ssh_cidr           = "0.0.0.0/0" # SSH-Zugriff von überall erlauben
 }
 
 # Packer-Image aus Glance laden

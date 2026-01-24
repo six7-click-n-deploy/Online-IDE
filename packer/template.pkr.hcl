@@ -14,16 +14,16 @@ packer {
 locals {
   # Platform-spezifisch (immer OpenStack)
   cloud = "openstack"
-  
+
   # App-spezifische Build-Konfiguration (vom App-Entwickler definiert)
   provision_script        = "scripts/provision.sh"
   source_image_name       = "Ubuntu 22.04"
   flavor                  = "gp1.small"
   ssh_username            = "ubuntu"
   ssh_timeout             = "20m"
-  use_blockstorage_volume = false  # Empfohlen: false (verhindert hängende Volumes)
+  use_blockstorage_volume = false # Empfohlen: false (verhindert hängende Volumes)
   volume_size             = 10
-  use_floating_ip         = false  # Build-VM braucht keine Floating IP
+  use_floating_ip         = false # Build-VM braucht keine Floating IP
 }
 
 source "openstack" "image" {
