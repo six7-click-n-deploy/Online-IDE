@@ -91,6 +91,11 @@ resource "openstack_compute_instance_v2" "team_ide" {
 
   security_groups = [openstack_networking_secgroup_v2.team_sg[each.key].name]
 
+  timeouts {
+    create = "15m"
+    delete = "15m"
+  }
+
   network {
     uuid = var.network_uuid
   }
