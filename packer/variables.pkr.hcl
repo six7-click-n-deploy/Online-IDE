@@ -21,5 +21,5 @@ variable "networks" {
 variable "security_groups" {
   type        = list(string)
   description = "[PLATFORM] Security Groups für Build-VM (von Platform-Admin konfiguriert)"
-  default     = ["simple-webserver-sg-81ec1652"]
+  default     = ["4ffaf007-df66-4250-9118-1bd99378d34a"]
 }
