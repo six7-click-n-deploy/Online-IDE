@@ -83,9 +83,9 @@ resource "random_password" "user_passwords" {
 
 # Pro Team ein eigenes Port-Objekt
 resource "openstack_networking_port_v2" "team_port" {
-  for_each = toset(local.teams_list)
-  network_id = var.network_uuid
-    security_group_ids = [var.shared_secgroup_id]
+  for_each           = toset(local.teams_list)
+  network_id         = var.network_uuid
+  security_group_ids = [var.shared_secgroup_id]
 }
 
 # Pro Team eine VM deployen, die explizit an den Port gebunden ist
