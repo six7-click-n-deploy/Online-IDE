@@ -29,41 +29,41 @@ ssh_pwauth: true
 # code-server pro User als System-Service starten
 # Jeder User bekommt eigenen code-server auf eigenem Port mit eigenem Passwort
 runcmd:
-%{ for idx, user_id in keys(users) ~}
-  # User ${users[user_id].username}: code-server auf Port ${8080 + idx}
-  - mkdir -p /home/${users[user_id].username}/.local/share/code-server
-  - mkdir -p /home/${users[user_id].username}/.config/code-server
-  - chown -R ${users[user_id].username}:${users[user_id].username} /home/${users[user_id].username}/.local
-  - chown -R ${users[user_id].username}:${users[user_id].username} /home/${users[user_id].username}/.config
+%{ for user_id, user in users ~}
+  # User ${user.username}: code-server auf Port ${lookup(user_ports, user_id, 8080)}
+  - mkdir -p /home/${user.username}/.local/share/code-server
+  - mkdir -p /home/${user.username}/.config/code-server
+  - chown -R ${user.username}:${user.username} /home/${user.username}/.local
+  - chown -R ${user.username}:${user.username} /home/${user.username}/.config
   - |
-    cat > /home/${users[user_id].username}/.config/code-server/config.yaml << 'EOFCONFIG${idx}'
-    bind-addr: 0.0.0.0:${8080 + idx}
+    cat > /home/${user.username}/.config/code-server/config.yaml << 'EOFCONFIG${user_id}'
+    bind-addr: 0.0.0.0:${lookup(user_ports, user_id, 8080)}
     auth: password
-    password: ${passwords[user_id]}
+    password: "${passwords[user_id]}"
     cert: false
-    user-data-dir: /home/${users[user_id].username}/.local/share/code-server
-    EOFCONFIG${idx}
-  - chown ${users[user_id].username}:${users[user_id].username} /home/${users[user_id].username}/.config/code-server/config.yaml
-  - chmod 600 /home/${users[user_id].username}/.config/code-server/config.yaml
+    user-data-dir: /home/${user.username}/.local/share/code-server
+    EOFCONFIG${user_id}
+  - chown ${user.username}:${user.username} /home/${user.username}/.config/code-server/config.yaml
+  - chmod 600 /home/${user.username}/.config/code-server/config.yaml
   - |
-    cat > /etc/systemd/system/code-server-${users[user_id].username}.service << 'EOFSVC${idx}'
+    cat > /etc/systemd/system/code-server-${user.username}.service << 'EOFSVC${user_id}'
     [Unit]
-    Description=code-server for ${users[user_id].username}
+    Description=code-server for ${user.username}
     After=network.target
 
     [Service]
     Type=simple
-    User=${users[user_id].username}
-    WorkingDirectory=/home/${users[user_id].username}
-    ExecStart=/usr/bin/code-server --config /home/${users[user_id].username}/.config/code-server/config.yaml
+    User=${user.username}
+    WorkingDirectory=/home/${user.username}
+    ExecStart=/usr/bin/code-server --config /home/${user.username}/.config/code-server/config.yaml
     Restart=always
     RestartSec=10
 
     [Install]
     WantedBy=multi-user.target
-    EOFSVC${idx}
+    EOFSVC${user_id}
   - systemctl daemon-reload
-  - systemctl enable code-server-${users[user_id].username}
-  - systemctl start code-server-${users[user_id].username}
+  - systemctl enable code-server-${user.username}
+  - systemctl start code-server-${user.username}
 %{ endfor ~}
 
