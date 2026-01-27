@@ -77,10 +77,18 @@ resource "random_password" "user_passwords" {
 }
 
 ############################
+
 # TEAM-BASED VMs
 ############################
 
-# Pro Team eine VM deployen
+# Pro Team ein eigenes Port-Objekt
+resource "openstack_networking_port_v2" "team_port" {
+  for_each = toset(local.teams_list)
+  network_id = var.network_uuid
+  security_group_ids = [openstack_networking_secgroup_v2.team_sg[each.key].id]
+}
+
+# Pro Team eine VM deployen, die explizit an den Port gebunden ist
 resource "openstack_compute_instance_v2" "team_ide" {
   for_each = toset(local.teams_list)
 
@@ -89,15 +97,13 @@ resource "openstack_compute_instance_v2" "team_ide" {
   flavor_name = local.flavor
   key_pair    = local.key_pair != "" ? local.key_pair : null
 
-  security_groups = [openstack_networking_secgroup_v2.team_sg[each.key].name]
-
   timeouts {
     create = "15m"
     delete = "15m"
   }
 
   network {
-    uuid = var.network_uuid
+    port = openstack_networking_port_v2.team_port[each.key].id
   }
 
   # cloud-init user-data: User und Gruppen für dieses Team
@@ -169,11 +175,11 @@ resource "openstack_networking_floatingip_v2" "team_fip" {
   pool = data.openstack_networking_network_v2.external.name
 }
 
-resource "openstack_compute_floatingip_associate_v2" "team_fip_assoc" {
+resource "openstack_networking_floatingip_associate_v2" "team_fip_assoc" {
   for_each = local.enable_floating_ip ? toset(local.teams_list) : []
 
   floating_ip = openstack_networking_floatingip_v2.team_fip[each.key].address
-  instance_id = openstack_compute_instance_v2.team_ide[each.key].id
+  port_id     = openstack_networking_port_v2.team_port[each.key].id
 
   depends_on = [openstack_compute_instance_v2.team_ide]
 }
@@ -201,7 +207,7 @@ locals {
   user_accounts = {
     for uid, user in local.users_map : uid => {
       type     = "password"
-      ip       = local.enable_floating_ip ? openstack_networking_floatingip_v2.team_fip[user.team].address : openstack_compute_instance_v2.team_ide[user.team].network[0].fixed_ip_v4
+      ip       = local.enable_floating_ip ? openstack_networking_floatingip_v2.team_fip[user.team].address : openstack_networking_port_v2.team_port[user.team].all_fixed_ips[0]
       port     = 8080 + local.user_indices[uid]
       username = user.username
       auth     = random_password.user_passwords[uid].result
