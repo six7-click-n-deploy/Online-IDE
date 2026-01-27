@@ -33,3 +33,9 @@ variable "floating_ip_pool" {
   type        = string
   default     = "DHBW"
 }
+
+variable "shared_secgroup_id" {
+  description = "ID der gemeinsamen Security Group für alle VMs"
+  type        = string
+  default     = "4ffaf007-df66-4250-9118-1bd99378d34a"
+}

@@ -85,7 +85,7 @@ resource "random_password" "user_passwords" {
 resource "openstack_networking_port_v2" "team_port" {
   for_each = toset(local.teams_list)
   network_id = var.network_uuid
-  security_group_ids = [openstack_networking_secgroup_v2.team_sg[each.key].id]
+    security_group_ids = [var.shared_secgroup_id]
 }
 
 # Pro Team eine VM deployen, die explizit an den Port gebunden ist
@@ -117,51 +117,6 @@ resource "openstack_compute_instance_v2" "team_ide" {
   metadata = {
     team = each.key
   }
-}
-
-# Security Group pro Team
-resource "openstack_networking_secgroup_v2" "team_sg" {
-  for_each = toset(local.teams_list)
-
-  name        = "${local.app_name}-${each.key}-sg"
-  description = "Security group for team ${each.key} IDE"
-}
-
-# SSH-Zugriff
-resource "openstack_networking_secgroup_rule_v2" "ssh" {
-  for_each = toset(local.teams_list)
-
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "tcp"
-  port_range_min    = 22
-  port_range_max    = 22
-  remote_ip_prefix  = local.ssh_cidr
-  security_group_id = openstack_networking_secgroup_v2.team_sg[each.key].id
-}
-
-# code-server Ports 8080-8089 (für bis zu 10 User pro Team)
-resource "openstack_networking_secgroup_rule_v2" "code_server" {
-  for_each = toset(local.teams_list)
-
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "tcp"
-  port_range_min    = 8080
-  port_range_max    = 8089
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.team_sg[each.key].id
-}
-
-# ICMP (optional)
-resource "openstack_networking_secgroup_rule_v2" "icmp" {
-  for_each = local.allow_icmp ? toset(local.teams_list) : []
-
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  protocol          = "icmp"
-  remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = openstack_networking_secgroup_v2.team_sg[each.key].id
 }
 
 ############################
