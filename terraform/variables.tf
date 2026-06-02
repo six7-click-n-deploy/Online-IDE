@@ -19,7 +19,7 @@ variable "users" {
 variable "image_name" {
   description = "[BACKEND] Name des Packer-Images aus Glance (z.B. online-ide-v1)"
   type        = string
-  default     = "online-ide-v1"
+  default     = "online-ide-vX"
 }
 
 variable "network_uuid" {
