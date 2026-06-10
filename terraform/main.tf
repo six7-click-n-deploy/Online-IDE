@@ -110,6 +110,10 @@ resource "openstack_compute_instance_v2" "team_ide" {
     users      = { for uid, u in local.users_map : uid => u if u.team == each.key }
     passwords  = { for uid, u in local.users_map : uid => random_password.user_passwords[uid].result if u.team == each.key }
     user_ports = { for uid, u in local.users_map : uid => 8080 + local.user_indices[uid] if u.team == each.key }
+    # Forward the platform-uploaded files into the cloud-init
+    # template — write_files iterates over the values and lays them
+    # down on disk via base64 decode (``encoding: b64``).
+    assignment_files = var.assignment_files
   })
 
   metadata = {

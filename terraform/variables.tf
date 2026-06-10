@@ -11,6 +11,30 @@ variable "users" {
   default = {}
 }
 
+# File-Upload-Beispiel: der Lehrende lädt im Wizard eine Datei
+# (z.B. eine PDF-Aufgabenstellung) hoch, die platform-seitig
+# base64-encodiert in dieser Variable landet. Das ``user-data.yaml.tpl``
+# unten dekodiert sie und legt sie unter ``/opt/material/`` ab.
+#
+# Der ``@openstack:file:all``-Marker steuert das Wizard-UI:
+#   * ``all``  → eine FileDropZone, geteilte Datei für alle VMs
+#   * ``team`` → eine FileDropZone pro Team (map(map(object(...))))
+#   * ``user`` → eine FileDropZone pro User (Composite-Key Team-User)
+#
+# Der innere ``map``-Wrapper hält Raum offen für künftiges
+# Multi-File-pro-Slot — heute kommt immer genau ein Eintrag mit Key
+# ``"uploaded"`` an.
+variable "assignment_files" {
+  description = "[CONTRACT] Vom Dozenten hochgeladene Begleitmaterialien @openstack:file:all"
+  type = map(object({
+    name         = string
+    content_b64  = string
+    size         = number
+    content_type = string
+  }))
+  default = {}
+}
+
 ########################################
 # CONTRACT-Variablen (PFLICHT)
 # Werden vom Worker/Platform gesetzt

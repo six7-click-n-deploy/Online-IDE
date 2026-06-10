@@ -26,6 +26,22 @@ chpasswd:
 # SSH Passwort-Authentifizierung aktivieren
 ssh_pwauth: true
 
+# Dozenten-Materialien aus dem Wizard. Jeder Eintrag in
+# ``assignment_files`` wurde im Backend base64-encodiert; cloud-init
+# dekodiert das per ``encoding: b64`` und legt die Datei unter
+# ``/opt/material/<original-name>`` ab. Das Verzeichnis wird allen
+# Team-Usern lesbar gemacht (0644 + lesender Pfad).
+%{ if length(assignment_files) > 0 ~}
+write_files:
+%{ for slot_key, file in assignment_files ~}
+  - path: /opt/material/${file.name}
+    content: ${file.content_b64}
+    encoding: b64
+    owner: root:root
+    permissions: '0644'
+%{ endfor ~}
+%{ endif ~}
+
 # code-server pro User als System-Service starten
 # Jeder User bekommt eigenen code-server auf eigenem Port mit eigenem Passwort
 runcmd:
