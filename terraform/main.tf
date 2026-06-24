@@ -90,9 +90,23 @@ resource "openstack_networking_port_v2" "team_port" {
 resource "openstack_compute_instance_v2" "team_ide" {
   for_each = toset(local.teams_list)
 
-  name        = "${local.app_name}-${each.key}"
-  image_id    = data.openstack_images_image_v2.image.id
-  flavor_name = local.flavor
+  name     = "${local.app_name}-${each.key}"
+  image_id = data.openstack_images_image_v2.image.id
+  # Per-Team-Flavor (wenn vom Wizard gewählt) hat Vorrang über den
+  # statischen ``local.flavor``-Default. Der Wizard liefert eine
+  # Flavor-UUID (Marker ``@openstack:flavor:id:single:team`` →
+  # ``osMode = id``), also setzen wir hier ``flavor_id`` statt
+  # ``flavor_name``. ``flavor_id`` und ``flavor_name`` sind beim
+  # OpenStack-Provider gegenseitig exklusiv — wer beide setzt,
+  # bekommt einen Konflikt-Error beim Apply.
+  #
+  # Fallback: Wenn für dieses Team kein Eintrag in
+  # ``var.team_flavor_ids`` existiert (User hat den Slot leer
+  # gelassen ODER die Variable ist überhaupt nicht gesetzt), greift
+  # ``local.flavor``. Dadurch bleibt das Default-Verhalten
+  # rückwärtskompatibel.
+  flavor_id   = try(var.team_flavor_ids[each.key], null)
+  flavor_name = try(var.team_flavor_ids[each.key], null) == null ? local.flavor : null
   key_pair    = local.key_pair != "" ? local.key_pair : null
 
   timeouts {
