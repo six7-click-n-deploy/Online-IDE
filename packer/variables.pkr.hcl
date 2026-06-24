@@ -14,12 +14,12 @@ variable "image_name" {
 
 variable "networks" {
   type        = list(string)
-  description = "[PLATFORM] Netzwerk-Namen für die Build-VM (von Platform-Admin konfiguriert). Der OpenStack-Packer-Builder akzeptiert Namen ODER UUIDs in diesem Feld — wir bevorzugen Namen, weil sie cloud-übergreifend stabiler sind. @openstack:network:name:list"
-  default     = ["NAT"]
+  description = "[PLATFORM] Netzwerk-UUIDs für die Build-VM (von Platform-Admin konfiguriert). Der OpenStack-Packer-Builder reicht diese Liste 1:1 an die Nova-API durch, die hier **UUIDs** verlangt — Namen werden mit `Bad networks format: network uuid is not in proper format` abgelehnt. Bitte UUID eintragen. @openstack:network:id:list"
+  default     = ["4971e080-966d-485e-a161-3e2b7fefad53"]
 }
 
 variable "security_groups" {
   type        = list(string)
-  description = "[PLATFORM] Security-Group-Namen für die Build-VM (von Platform-Admin konfiguriert). Wie ``networks`` akzeptiert das Packer-Builder-Feld Namen oder UUIDs. @openstack:security_group:name:list"
+  description = "[PLATFORM] Security-Group-Namen für die Build-VM (von Platform-Admin konfiguriert). Im Gegensatz zu `networks` resolved der OpenStack-Packer-Builder dieses Feld selbst — Namen sind hier explizit erlaubt und einfacher zu pflegen. @openstack:security_group:name:list"
   default     = ["default"]
 }
