@@ -16,16 +16,21 @@ variable "users" {
 # base64-encodiert in dieser Variable landet. Das ``user-data.yaml.tpl``
 # unten dekodiert sie und legt sie unter ``/opt/material/`` ab.
 #
-# Der ``@openstack:file:all``-Marker steuert das Wizard-UI:
+# Der ``@openstack:file:<scope>:<exts>``-Marker steuert das Wizard-UI:
 #   * ``all``  → eine FileDropZone, geteilte Datei für alle VMs
 #   * ``team`` → eine FileDropZone pro Team (map(map(object(...))))
 #   * ``user`` → eine FileDropZone pro User (Composite-Key Team-User)
+#
+# Der vierte Slot ist Pflicht und listet die erlaubten Dateiendungen
+# (mehrere mit ``|`` getrennt, z.B. ``pdf|docx``). Frontend nutzt das
+# als ``accept``-Filter, Backend lehnt nicht-passende Uploads mit
+# 422 ab.
 #
 # Der innere ``map``-Wrapper hält Raum offen für künftiges
 # Multi-File-pro-Slot — heute kommt immer genau ein Eintrag mit Key
 # ``"uploaded"`` an.
 variable "assignment_files" {
-  description = "[CONTRACT] Vom Dozenten hochgeladene Begleitmaterialien @openstack:file:all"
+  description = "[CONTRACT] Vom Dozenten hochgeladene Begleitmaterialien @openstack:file:all:pdf"
   type = map(object({
     name         = string
     content_b64  = string
@@ -33,6 +38,18 @@ variable "assignment_files" {
     content_type = string
   }))
   default = {}
+}
+
+# Per-Team-Beispiel: jeder Lehrgruppe (Team) wird im Wizard eine
+# eigene Flavor-Größe zugewiesen. Der Wizard rendert einen Picker
+# pro Team-Name; Terraform sieht eine ``map(string)`` mit
+# ``team_name → flavor_id``-Einträgen. Beispiel für die neue
+# ``var_scope``-Marker-Erweiterung — beweist, dass nicht nur
+# File-Variablen scoped sein können.
+variable "team_flavor_ids" {
+  description = "[CONTRACT] Flavor-ID pro Team — Picker-Auswahl @openstack:flavor:id:single:team"
+  type        = map(string)
+  default     = {}
 }
 
 ########################################
