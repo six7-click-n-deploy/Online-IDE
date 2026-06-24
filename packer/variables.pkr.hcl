@@ -14,12 +14,12 @@ variable "image_name" {
 
 variable "networks" {
   type        = list(string)
-  description = "[PLATFORM] Netzwerk-UUIDs für Build-VM (von Platform-Admin konfiguriert) @openstack:network:id:list"
-  default     = ["4971e080-966d-485e-a161-3e2b7fefad53"]
+  description = "[PLATFORM] Netzwerk-Namen für die Build-VM (von Platform-Admin konfiguriert). Der OpenStack-Packer-Builder akzeptiert Namen ODER UUIDs in diesem Feld — wir bevorzugen Namen, weil sie cloud-übergreifend stabiler sind. @openstack:network:name:list"
+  default     = ["NAT"]
 }
 
 variable "security_groups" {
   type        = list(string)
-  description = "[PLATFORM] Security Groups für Build-VM (von Platform-Admin konfiguriert) @openstack:security_group:id:list"
-  default     = ["4ffaf007-df66-4250-9118-1bd99378d34a"]
+  description = "[PLATFORM] Security-Group-Namen für die Build-VM (von Platform-Admin konfiguriert). Wie ``networks`` akzeptiert das Packer-Builder-Feld Namen oder UUIDs. @openstack:security_group:name:list"
+  default     = ["default"]
 }
