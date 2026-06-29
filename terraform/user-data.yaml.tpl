@@ -26,27 +26,22 @@ chpasswd:
 # SSH Passwort-Authentifizierung aktivieren
 ssh_pwauth: true
 
-# Dozenten-Materialien aus dem Wizard. Jeder Eintrag in
-# ``assignment_files`` wurde im Backend base64-encodiert; cloud-init
-# dekodiert das per ``encoding: b64`` und legt die Datei unter
-# ``/opt/material/<original-name>`` ab. Das Verzeichnis wird allen
-# Team-Usern lesbar gemacht (0644 + lesender Pfad).
-%{ if length(assignment_files) > 0 ~}
-write_files:
-%{ for slot_key, file in assignment_files ~}
-  - path: /opt/material/${file.name}
-    content: ${file.content_b64}
-    encoding: b64
-    owner: root:root
-    permissions: '0644'
-%{ endfor ~}
-%{ endif ~}
+# Individuelle Java-Aufgaben pro User werden in runcmd nach mkdir geschrieben
 
 # code-server pro User als System-Service starten
 # Jeder User bekommt eigenen code-server auf eigenem Port mit eigenem Passwort
 runcmd:
 %{ for user_id, user in users ~}
   # User ${user.username}: code-server auf Port ${lookup(user_ports, user_id, 8080)}
+  - mkdir -p /home/${user.username}/Coding-Aufgabe
+  - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe
+%{ if lookup(assignment_files, user_id, null) != null ~}
+%{ for slot_key, file in assignment_files[user_id] ~}
+  - echo '${file.content_b64}' | base64 -d > /home/${user.username}/Coding-Aufgabe/${file.name}
+  - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe/${file.name}
+  - chmod 644 /home/${user.username}/Coding-Aufgabe/${file.name}
+%{ endfor ~}
+%{ endif ~}
   - mkdir -p /home/${user.username}/.local/share/code-server
   - mkdir -p /home/${user.username}/.config/code-server
   - chown -R ${user.username}:${user.username} /home/${user.username}/.local

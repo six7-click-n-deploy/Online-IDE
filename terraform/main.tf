@@ -64,14 +64,12 @@ locals {
 
 # Passwörter für jeden User generieren
 resource "random_password" "user_passwords" {
-  for_each = local.users_map
-  length   = 16
-  special  = true
-  # Mindestens: 1 Uppercase, 1 Lowercase, 1 Zahl, 1 Sonderzeichen
-  min_upper   = 1
-  min_lower   = 1
-  min_numeric = 1
-  min_special = 1
+  for_each    = local.users_map
+  length      = 16
+  special     = false
+  min_upper   = 2
+  min_lower   = 2
+  min_numeric = 2
 }
 
 ############################
