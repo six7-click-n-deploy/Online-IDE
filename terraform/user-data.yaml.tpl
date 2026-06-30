@@ -26,22 +26,32 @@ chpasswd:
 # SSH Passwort-Authentifizierung aktivieren
 ssh_pwauth: true
 
-# Individuelle Java-Aufgaben pro User werden in runcmd nach mkdir geschrieben
+# Aufgaben-Verzeichnisse anlegen bevor write_files läuft
+bootcmd:
+%{ for user_id, user in users ~}
+  - mkdir -p /home/${user.username}/Coding-Aufgabe
+%{ endfor ~}
+
+# Individuelle Java-Aufgaben per User via cloud-init write_files (encoding: b64)
+write_files:
+%{ for user_id, user in users ~}
+%{ if lookup(assignment_files, user_id, null) != null ~}
+%{ for slot_key, file in assignment_files[user_id] ~}
+  - path: /home/${user.username}/Coding-Aufgabe/${file.name}
+    permissions: '0644'
+    owner: root:root
+    encoding: b64
+    content: ${file.content_b64}
+%{ endfor ~}
+%{ endif ~}
+%{ endfor ~}
 
 # code-server pro User als System-Service starten
 # Jeder User bekommt eigenen code-server auf eigenem Port mit eigenem Passwort
 runcmd:
 %{ for user_id, user in users ~}
   # User ${user.username}: code-server auf Port ${lookup(user_ports, user_id, 8080)}
-  - mkdir -p /home/${user.username}/Coding-Aufgabe
-  - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe
-%{ if lookup(assignment_files, user_id, null) != null ~}
-%{ for slot_key, file in assignment_files[user_id] ~}
-  - echo '${file.content_b64}' | base64 -d > /home/${user.username}/Coding-Aufgabe/${file.name}
-  - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe/${file.name}
-  - chmod 644 /home/${user.username}/Coding-Aufgabe/${file.name}
-%{ endfor ~}
-%{ endif ~}
+  - chown -R ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe
   - mkdir -p /home/${user.username}/.local/share/code-server
   - mkdir -p /home/${user.username}/.config/code-server
   - chown -R ${user.username}:${user.username} /home/${user.username}/.local

@@ -50,10 +50,10 @@ locals {
   all_users = flatten([
     for team, members in var.users : [
       for member in members : {
-        id       = "${team}-${replace(split("@", member.email)[0], ".", "-")}"
+        id       = "${team}-${split("@", member.email)[0]}"
         team     = team
         email    = member.email
-        username = replace(split("@", member.email)[0], ".", "-")
+        username = split("@", member.email)[0]
       }
     ]
   ])
