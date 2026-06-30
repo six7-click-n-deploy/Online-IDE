@@ -26,19 +26,14 @@ chpasswd:
 # SSH Passwort-Authentifizierung aktivieren
 ssh_pwauth: true
 
-# Aufgaben-Verzeichnisse anlegen bevor write_files läuft
-bootcmd:
-%{ for user_id, user in users ~}
-  - mkdir -p /home/${user.username}/Coding-Aufgabe
-%{ endfor ~}
-
-# Individuelle Java-Aufgaben per User via cloud-init write_files (encoding: b64)
+# Individuelle Java-Aufgaben per User in neutralen Staging-Pfad schreiben.
+# /tmp/ wird von cloud-init nicht defer'd — kein write_files_deferred-Problem.
 write_files:
 %{ for user_id, user in users ~}
 %{ if lookup(assignment_files, user_id, null) != null ~}
 %{ for slot_key, file in assignment_files[user_id] ~}
-  - path: /home/${user.username}/Coding-Aufgabe/${file.name}
-    permissions: '0644'
+  - path: /tmp/coding-aufgaben/${user_id}/${file.name}
+    permissions: '0600'
     owner: root:root
     encoding: b64
     content: ${file.content_b64}
@@ -51,6 +46,14 @@ write_files:
 runcmd:
 %{ for user_id, user in users ~}
   # User ${user.username}: code-server auf Port ${lookup(user_ports, user_id, 8080)}
+  - mkdir -p /home/${user.username}/Coding-Aufgabe
+%{ if lookup(assignment_files, user_id, null) != null ~}
+%{ for slot_key, file in assignment_files[user_id] ~}
+  - mv /tmp/coding-aufgaben/${user_id}/${file.name} /home/${user.username}/Coding-Aufgabe/${file.name}
+  - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe/${file.name}
+  - chmod 644 /home/${user.username}/Coding-Aufgabe/${file.name}
+%{ endfor ~}
+%{ endif ~}
   - chown -R ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe
   - mkdir -p /home/${user.username}/.local/share/code-server
   - mkdir -p /home/${user.username}/.config/code-server
