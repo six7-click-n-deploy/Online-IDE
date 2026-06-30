@@ -32,7 +32,7 @@ write_files:
 %{ for user_id, user in users ~}
 %{ if lookup(assignment_files, user_id, null) != null ~}
 %{ for slot_key, file in assignment_files[user_id] ~}
-  - path: /tmp/coding-aufgaben/${user_id}/${file.name}
+  - path: /tmp/coding-aufgaben/${user.username}/${file.name}
     permissions: '0600'
     owner: root:root
     encoding: b64
@@ -49,7 +49,7 @@ runcmd:
   - mkdir -p /home/${user.username}/Coding-Aufgabe
 %{ if lookup(assignment_files, user_id, null) != null ~}
 %{ for slot_key, file in assignment_files[user_id] ~}
-  - mv /tmp/coding-aufgaben/${user_id}/${file.name} /home/${user.username}/Coding-Aufgabe/${file.name}
+  - mv /tmp/coding-aufgaben/${user.username}/${file.name} /home/${user.username}/Coding-Aufgabe/${file.name}
   - chown ${user.username}:${user.username} /home/${user.username}/Coding-Aufgabe/${file.name}
   - chmod 644 /home/${user.username}/Coding-Aufgabe/${file.name}
 %{ endfor ~}
